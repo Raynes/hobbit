@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8" content="text/html" http-equiv="Content-Type" /><meta content="I library for interfacing with various URL shortening services." name="description" /><style type="text/css">/**
+<html><head><meta charset="utf-8" content="text/html" http-equiv="Content-Type" /><meta content="A library for interfacing with various URL shortening services." name="description" /><style type="text/css">/**
  * SyntaxHighlighter
  * http://alexgorbatchev.com/SyntaxHighlighter
  *
@@ -2526,8 +2526,8 @@ $(document).ready(function() {
     ul.css('margin-top', '0px')
 
 })
-</script><title>hobbit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">hobbit</h1><h2 class="project-version">0.1.0</h2><br /><p>I library for interfacing with various URL shortening services.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">clj-http/clj-http</td><td class="dotted"><hr /></td><td class="dep-version">0.2.1</td></tr><tr><td class="dep-name">org.clojure/data.json</td><td class="dotted"><hr /></td><td class="dep-version">0.1.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#hobbit.bitly">hobbit.bitly</a></li><li><a href="#hobbit.core">hobbit.core</a></li><li><a href="#hobbit.utils">hobbit.utils</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#hobbit.bitly" name="hobbit.bitly"><h1 class="project-name">hobbit.bitly</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Bitly</h1>
+</script><title>hobbit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">hobbit</h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>A library for interfacing with various URL shortening services.</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">clj-http/clj-http</td><td class="dotted"><hr /></td><td class="dep-version">0.2.1</td></tr><tr><td class="dep-name">org.clojure/data.json</td><td class="dotted"><hr /></td><td class="dep-version">0.1.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#hobbit.bitly">hobbit.bitly</a></li><li><a href="#hobbit.core">hobbit.core</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#hobbit.bitly" name="hobbit.bitly"><h1 class="project-name">hobbit.bitly</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Bitly</h1>
 
 <p>Bitly is a URL shortening service with a large, useful API. In order to use it, you need a API
 key. You can get one from <a href="http://bitly.com/a/sign_up">the sign up page</a>.
@@ -2550,17 +2550,25 @@ the <a href="j.mp">j.mp</a> <code>domain</code>. If you set <code>domain</code> 
 </td><td class="codes" /><pre class="brush: clojure">(defrecord Bitly [key login domain]
   Shortener
   (shorten [this url]
-    (-&gt; (request key login &quot;shorten&quot; {&quot;longUrl&quot; url, &quot;domain&quot; domain})
-        :data
-        :url))
+    (when-let [data (seq (:data (request key login &quot;shorten&quot;
+                                         {&quot;longUrl&quot; url, &quot;domain&quot; domain})))]
+      (first data)))
   (expand [this url]
     (-&gt; (request key login &quot;expand&quot; {&quot;shortUrl&quot; url})
         :data
         :expand
         first
-        :long_url)))</pre></tr><tr><td class="docs"><p>If domain isn't set, <code>"bit.ly"</code> is used.</p>
-</td><td class="codes" /><pre class="brush: clojure">(defmethod shortener :bitly [_ key login &amp; [domain]]
-  (-&gt;Bitly key login (or domain &quot;bit.ly&quot;)))</pre></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#hobbit.core" name="hobbit.core"><h1 class="project-name">hobbit.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+        :long_url)))</pre></tr><tr><td class="docs"><p>This auth-map can contain a :domain key. If it isn't there, <code>"bit.ly"</code> will be used.</p>
+</td><td class="codes" /><pre class="brush: clojure">(defmethod shortener :bitly [_ {{:keys [key login domain]
+                                 :or {domain &quot;bit.ly&quot;}}
+                                :bitly}]
+  (-&gt;Bitly key login domain))</pre></tr><tr><td class="docs"><p>For j.mp URLs.</p>
+</td><td class="codes" /><pre class="brush: clojure">(defmethod shortener :jmp [_ auth]
+  (shortener :bitly auth))</pre></tr><tr><td class="docs">
+</td><td class="codes" /><pre class="brush: clojure">(defn bitly-shortener
+  &quot;Create a Bitly instance.&quot;
+  [key login &amp; [domain]]
+  (shortener :bitly {:bitly {:key key :login login :domain domain}}))</pre></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#hobbit.core" name="hobbit.core"><h1 class="project-name">hobbit.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes" /><pre class="brush: clojure">(ns hobbit.core
   (:require [clojure.string :as string])
   (:import java.net.URL))</pre></tr><tr><td class="docs">
@@ -2584,10 +2592,17 @@ the <a href="j.mp">j.mp</a> <code>domain</code>. If you set <code>domain</code> 
    it is a URL, in which case the domain is found and pulled out. The string
    is sanitized (whether it is a URL or not) by filtering out any non-word
    characters and then `keyword` is called on it, making it a keyword. The
-   final dispatch value is always a keyword.&quot;
-  dispatch)</pre></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#hobbit.utils" name="hobbit.utils"><h1 class="project-name">hobbit.utils</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes" /><pre class="brush: clojure">(ns hobbit.utils
-  (:import java.net.URLEncoder))</pre></tr><tr><td class="docs">
-</td><td class="codes" /><pre class="brush: clojure">(defn encode-url [url]
-  (URLEncoder/encode url &quot;UTF-8&quot;))</pre></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_hobbit.bitly">hobbit.bitly</li><li class="floating-toc-li" id="floating-toc_hobbit.core">hobbit.core</li><li class="floating-toc-li" id="floating-toc_hobbit.utils">hobbit.utils</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+   final dispatch value is always a keyword.
+   Implementers of this method should always take a map as well. This map looks
+   like `{:service auth-map, :service2 auth-map}` where `service` is the dispatch
+   keyword for a service and `auth-map` is the authentication map that the service
+   requires. If a particular service does not require an authentication map, then
+   this map as a whole may be left out.
+   The purpose behind this map-oriented approach is so that users can create a
+   shortener from nothing but an already-shortened URL and the shortener will be
+   ready, authentication information and all. You only need to provide keys in the
+   auth map for services that you wish to support. The idea behind all of this is that
+   you can call `expand` on any given shortened URL and get the expanded URL without
+   ever even knowing what service it was shortened with in the first place.&quot;
+  dispatch)</pre></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_hobbit.bitly">hobbit.bitly</li><li class="floating-toc-li" id="floating-toc_hobbit.core">hobbit.core</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
