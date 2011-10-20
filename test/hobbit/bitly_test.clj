@@ -7,5 +7,5 @@
 (def long "http://blog.raynes.me")
 
 (deftest shorten-test
-  (is (shorten (bitly-shortener (:key auth) (:login auth)) long))
-  (is (shorten (bitly-shortener (:key auth) (:login auth) "j.mp") long)))
+  (is (link? (shorten (bitly-shortener (:key auth) (:login auth)) long)))
+  (is (link? (shorten (bitly-shortener (:key auth) (:login auth) "j.mp") long))))
