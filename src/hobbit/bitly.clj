@@ -1,3 +1,9 @@
+;; # Bitly
+;; Bitly is a URL shortening service with a large, useful API. In order to use it, you need a API
+;; key. You can get one from [the sign up page](http://bitly.com/a/sign_up).
+;; We're not going to implement the entire API. We're only going to implement the pieces that
+;; do not require oauth.
+
 (ns hobbit.bitly
   (:use [clojure.data.json :only [read-json]]
         hobbit.core)
@@ -14,6 +20,8 @@
       :body
       read-json))
 
+;; Bitly requires an API key and login. They are not optional. Furthermore, bitly also owns
+;; the [j.mp](j.mp) `domain`. If you set `domain` to "j.mp", it will prefer that domain.
 (defrecord Bitly [key login domain]
   Shortener
   
@@ -28,3 +36,7 @@
         :expand
         first
         :long_url)))
+
+;; If domain isn't set, `"bit.ly"` is used.
+(defmethod shortener :bitly [_ key login & [domain]]
+  (->Bitly key login (or domain "bit.ly")))
