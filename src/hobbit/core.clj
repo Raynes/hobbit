@@ -15,9 +15,10 @@
       s) #"[^\w]" "")))
 
 (defn- dispatch [x & args]
-  (if (keyword? x)
-    x
-    (sanitize x)))
+  (when x
+    (if (keyword? x)
+      x
+      (sanitize x))))
 
 (defmulti shortener
   "Create a Shortener for a service determined by dispatch. Dispatch value
@@ -40,3 +41,5 @@
    you can call `expand` on any given shortened URL and get the expanded URL without
    ever even knowing what service it was shortened with in the first place."
   dispatch)
+
+(defmethod shortener :default [& _] nil)

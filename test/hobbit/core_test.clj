@@ -7,4 +7,5 @@
         long "http://blog.raynes.me"]
     (is (expand (shortener url (read-auth)) url))
     (is (shorten (shortener :bitly (read-auth)) long))
-    (is (shorten (shortener "bit.ly" (read-auth)) long))))
+    (is (shorten (shortener "bit.ly" (read-auth)) long))
+    (is (nil? (shortener nil)))))
