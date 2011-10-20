@@ -26,9 +26,9 @@
   Shortener
   
   (shorten [this url]
-    (when-let [data (seq (:data (request key login "shorten"
-                                         {"longUrl" url, "domain" domain})))]
-      (first data)))
+    (when-let [data (request key login "shorten"
+                             {"longUrl" url, "domain" domain})]
+      (-> data :data :url)))
   
   (expand [this url]
     (-> (request key login "expand" {"shortUrl" url})
