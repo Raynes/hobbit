@@ -7,6 +7,10 @@
   (shorten [this url] "Shorten a URL.")
   (expand  [this url] "Expand a URL."))
 
+(defprotocol CustomizableShortner
+  "For APIs that support setting the resulting URL."
+  (shorten-custom [this url custom] "Shorten a URL, setting the result URL to custom."))
+
 (defn- sanitize [s]
   (keyword
    (string/replace
