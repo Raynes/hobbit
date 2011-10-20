@@ -26,9 +26,9 @@
   Shortener
   
   (shorten [this url]
-    (-> (request key login "shorten" {"longUrl" url, "domain" domain})
-        :data
-        :url))
+    (when-let [data (seq (:data (request key login "shorten"
+                                         {"longUrl" url, "domain" domain})))]
+      (first data)))
   
   (expand [this url]
     (-> (request key login "expand" {"shortUrl" url})
@@ -37,6 +37,17 @@
         first
         :long_url)))
 
-;; If domain isn't set, `"bit.ly"` is used.
-(defmethod shortener :bitly [_ key login & [domain]]
-  (->Bitly key login (or domain "bit.ly")))
+;; This auth-map can contain a :domain key. If it isn't there, `"bit.ly"` will be used.
+(defmethod shortener :bitly [_ {{:keys [key login domain]
+                                 :or {domain "bit.ly"}}
+                                :bitly}]
+  (->Bitly key login domain))
+
+;; For j.mp URLs.
+(defmethod shortener :jmp [_ auth]
+  (shortener :bitly auth))
+
+(defn bitly-shortener
+  "Create a Bitly instance."
+  [key login & [domain]]
+  (shortener :bitly {:bitly {:key key :login login :domain domain}}))
