@@ -1,4 +1,3 @@
-;; # Is.gd
 ;; is.gd probably has the easiest API of all, since you can get URLs back in plaintext. No
 ;; JSON parsing!
 (ns hobbit.isgd

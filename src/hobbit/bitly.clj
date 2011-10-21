@@ -1,4 +1,3 @@
-;; # Bitly
 ;; Bitly is a URL shortening service with a large, useful API. In order to use it, you need a API
 ;; key. You can get one from [the sign up page](http://bitly.com/a/sign_up).
 ;; We're not going to implement the entire API. We're only going to implement the pieces that
