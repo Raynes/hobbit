@@ -2527,7 +2527,7 @@ $(document).ready(function() {
 
 })
 </script><title>hobbit -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">hobbit</h1><h2 class="project-version">0.1.0-SNAPSHOT</h2><br /><p>A library for interfacing with various URL shortening services.</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">clj-http/clj-http</td><td class="dotted"><hr /></td><td class="dep-version">0.2.1</td></tr><tr><td class="dep-name">org.clojure/data.json</td><td class="dotted"><hr /></td><td class="dep-version">0.1.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#hobbit.bitly">hobbit.bitly</a></li><li><a href="#hobbit.core">hobbit.core</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#hobbit.bitly" name="hobbit.bitly"><h1 class="project-name">hobbit.bitly</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Bitly</h1>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">clj-http/clj-http</td><td class="dotted"><hr /></td><td class="dep-version">0.2.1</td></tr><tr><td class="dep-name">org.clojure/data.json</td><td class="dotted"><hr /></td><td class="dep-version">0.1.2</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#hobbit.bitly">hobbit.bitly</a></li><li><a href="#hobbit.core">hobbit.core</a></li><li><a href="#hobbit.isgd">hobbit.isgd</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#hobbit.bitly" name="hobbit.bitly"><h1 class="project-name">hobbit.bitly</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Bitly</h1>
 
 <p>Bitly is a URL shortening service with a large, useful API. In order to use it, you need a API
 key. You can get one from <a href="http://bitly.com/a/sign_up">the sign up page</a>.
@@ -2550,9 +2550,9 @@ the <a href="j.mp">j.mp</a> <code>domain</code>. If you set <code>domain</code> 
 </td><td class="codes" /><pre class="brush: clojure">(defrecord Bitly [key login domain]
   Shortener
   (shorten [this url]
-    (when-let [data (seq (:data (request key login &quot;shorten&quot;
-                                         {&quot;longUrl&quot; url, &quot;domain&quot; domain})))]
-      (first data)))
+    (when-let [data (request key login &quot;shorten&quot;
+                             {&quot;longUrl&quot; url, &quot;domain&quot; domain})]
+      (-&gt; data :data :url)))
   (expand [this url]
     (-&gt; (request key login &quot;expand&quot; {&quot;shortUrl&quot; url})
         :data
@@ -2576,16 +2576,24 @@ the <a href="j.mp">j.mp</a> <code>domain</code>. If you set <code>domain</code> 
   &quot;An API for shortening and expanding URLs.&quot;
   (shorten [this url] &quot;Shorten a URL.&quot;)
   (expand  [this url] &quot;Expand a URL.&quot;))</pre></tr><tr><td class="docs">
-</td><td class="codes" /><pre class="brush: clojure">(defn- sanitize [s]
+</td><td class="codes" /><pre class="brush: clojure">(defprotocol CustomizableShortner
+  &quot;Some APIs allow you to set what a URL is shortened to.&quot;
+  (shorten-custom [this url custom] &quot;Shorten a URL, setting the result URL to custom.&quot;))</pre></tr><tr><td class="docs">
+</td><td class="codes" /><pre class="brush: clojure">(defn- sanitize
+  &quot;Eliminate non-word characters from a string and make a keyword out of it.
+   If the string happens to be a URL, get the base domain.&quot;
+  [s]
   (keyword
    (string/replace
     (if (re-find #&quot;://&quot; s)
       (-&gt; s URL. .getHost)
-      s) #&quot;[^\w]&quot; )))</pre></tr><tr><td class="docs">
+      s)
+    #&quot;[^\w]&quot; )))</pre></tr><tr><td class="docs">
 </td><td class="codes" /><pre class="brush: clojure">(defn- dispatch [x &amp; args]
-  (if (keyword? x)
-    x
-    (sanitize x)))</pre></tr><tr><td class="docs">
+  (when x
+    (if (keyword? x)
+      x
+      (sanitize x))))</pre></tr><tr><td class="docs">
 </td><td class="codes" /><pre class="brush: clojure">(defmulti shortener
   &quot;Create a Shortener for a service determined by dispatch. Dispatch value
    can be a string or keyword. If it is a string then we check to see if
@@ -2604,5 +2612,31 @@ the <a href="j.mp">j.mp</a> <code>domain</code>. If you set <code>domain</code> 
    auth map for services that you wish to support. The idea behind all of this is that
    you can call `expand` on any given shortened URL and get the expanded URL without
    ever even knowing what service it was shortened with in the first place.&quot;
-  dispatch)</pre></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_hobbit.bitly">hobbit.bitly</li><li class="floating-toc-li" id="floating-toc_hobbit.core">hobbit.core</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+  dispatch)</pre></tr><tr><td class="docs"><p>Return nil for useless input.</p>
+</td><td class="codes" /><pre class="brush: clojure">(defmethod shortener :default [&amp; _] nil)</pre></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#hobbit.isgd" name="hobbit.isgd"><h1 class="project-name">hobbit.isgd</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h1>Is.gd</h1>
+
+<p>is.gd probably has the easiest API of all, since you can get URLs back in plaintext. No
+JSON parsing!</p>
+</td><td class="codes" /><pre class="brush: clojure">(ns hobbit.isgd
+  (:use hobbit.core)
+  (:require [clj-http.client :as http]))</pre></tr><tr><td class="docs">
+</td><td class="codes" /><pre class="brush: clojure">(defn shorten-isgd [url &amp; [custom]]
+  (:body (http/get &quot;http://is.gd/create.php&quot;
+                   {:query-params (merge {&quot;format&quot; &quot;simple&quot;
+                                          &quot;url&quot; url}
+                                         (when custom {:shorturl custom}))})))</pre></tr><tr><td class="docs"><p>Isgd doesn't require any authentication. It does, however, support a <code>shorturl</code> parameter
+that lets a user set what the URL will look like.</p>
+</td><td class="codes" /><pre class="brush: clojure">(defrecord Isgd []
+  Shortener
+  (shorten [this url] (shorten-isgd url))
+  (expand [this url]
+    (:body (http/get &quot;http://is.gd/lookup.php&quot;
+                     {:query-params {&quot;format&quot; &quot;simple&quot;, &quot;shorturl&quot; url}})))
+  CustomizableShortner
+  (shorten-custom [this url custom] (shorten-isgd url custom)))</pre></tr><tr><td class="docs"><p>No authentication. Just a shortcut for ->Isgd.</p>
+</td><td class="codes" /><pre class="brush: clojure">(defmethod shortener :isgd [&amp; _]
+  (-&gt;Isgd))</pre></tr><tr><td class="docs">
+</td><td class="codes" /><pre class="brush: clojure">(defn isgd-shortener
+  &quot;Convenience function for creating an isgd shortner.&quot;
+  [] (shortener :isgd))</pre></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a><div id="floating-toc"><ul><li class="floating-toc-li" id="floating-toc_hobbit.bitly">hobbit.bitly</li><li class="floating-toc-li" id="floating-toc_hobbit.core">hobbit.core</li><li class="floating-toc-li" id="floating-toc_hobbit.isgd">hobbit.isgd</li></ul></div></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
