@@ -8,15 +8,19 @@
   (expand  [this url] "Expand a URL."))
 
 (defprotocol CustomizableShortner
-  "For APIs that support setting the resulting URL."
+  "Some APIs allow you to set what a URL is shortened to."
   (shorten-custom [this url custom] "Shorten a URL, setting the result URL to custom."))
 
-(defn- sanitize [s]
+(defn- sanitize
+  "Eliminate non-word characters from a string and make a keyword out of it.
+   If the string happens to be a URL, get the base domain."
+  [s]
   (keyword
    (string/replace
     (if (re-find #"://" s)
       (-> s URL. .getHost)
-      s) #"[^\w]" "")))
+      s)
+    #"[^\w]" "")))
 
 (defn- dispatch [x & args]
   (when x
@@ -46,4 +50,5 @@
    ever even knowing what service it was shortened with in the first place."
   dispatch)
 
+;; Return nil for useless input.
 (defmethod shortener :default [& _] nil)

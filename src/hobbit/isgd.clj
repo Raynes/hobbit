@@ -25,6 +25,7 @@
 
   (shorten-custom [this url custom] (shorten-isgd url custom)))
 
+;; No authentication. Just a shortcut for ->Isgd.
 (defmethod shortener :isgd [& _]
   (->Isgd))
 
