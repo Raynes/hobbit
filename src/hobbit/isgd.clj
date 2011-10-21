@@ -17,7 +17,7 @@
   
   (shorten [this url] (shorten-isgd url))
   (expand [this url]
-    (:body (http/get "http://is.gd/lookup.php"
+    (:body (http/get "http://is.gd/forward.php"
                      {:query-params {"format" "simple", "shorturl" url}})))
 
   CustomizableShortner
